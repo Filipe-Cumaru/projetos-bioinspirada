@@ -18,7 +18,7 @@ class SGA8Queens(object):
 
     def fitness(self, table):
         # Based on https://bit.ly/32zycds.
-        eps = 0.01
+        eps = 1
         N = 8
         # Number of conflicts.
         result = 0
@@ -47,14 +47,17 @@ class SGA8Queens(object):
         return 1 / (result + eps)
 
     def select_parents(self):
+        # Numpy's random number generator.
         rng = np.random.default_rng()
-        candidates = rng.choice(self.population, size=5)
+        # Get 5 different random individuals from the population.
+        candidates = rng.choice(self.population, size=5, replace=False)
+        # Find the two candidates with the highest fitness.
         candidates_fitness = np.array([self.fitness(x) for x in candidates])
-        # Inside the brackets: find the index of the two highest fitness.
         p1, p2 = candidates[np.argsort(-candidates_fitness)[:2]]
         return p1, p2
 
     def crossover(self, p1, p2):
+        # Implementation of a cut and crossfill crossover.
         rng = np.random.default_rng()
         c1 = np.zeros(8, dtype="int64")
         c2 = np.zeros(8, dtype="int64")
@@ -78,6 +81,7 @@ class SGA8Queens(object):
     def mutate(self, child):
         rng = np.random.default_rng()
 
+        # Mutation by switching the position of a two genes.
         if rng.uniform() < self.p_m:
             i, j = rng.choice(8, size=2, replace=False)
             child[i], child[j] = child[j], child[i]
@@ -85,22 +89,23 @@ class SGA8Queens(object):
         return child
 
     def update_population(self, c1, c2):
+        # Find the two individuals with the lowest fitness value.
         weakest_solutions = np.argsort(self.pop_fitness)[:2]
+        # Replace them by the childs.
         self.population[weakest_solutions[0]] = c1
         self.population[weakest_solutions[1]] = c2
+        # Update the fitness table.
         self.pop_fitness[weakest_solutions[0]] = self.fitness(c1)
         self.pop_fitness[weakest_solutions[1]] = self.fitness(c2)
 
     def run(self):
         rng = np.random.default_rng()
         self.population = [rng.permutation(np.arange(1, 9)) for i in range(self.pop_size)]
-        self.pop_fitness = np.empty(self.pop_size)
+        self.pop_fitness = np.array([self.fitness(x) for x in self.population])
 
-        while self.num_fitness_eval < 10000 and self.pop_fitness.max() != 100:
+        while self.num_fitness_eval < 10000 and self.pop_fitness.max() < 1:
             p1, p2 = self.select_parents()
             c1, c2 = self.crossover(p1, p2)
             c1 = self.mutate(c1)
             c2 = self.mutate(c2)
-            self.pop_fitness = np.array([self.fitness(x) for x in self.population])
             self.update_population(c1, c2)
-
