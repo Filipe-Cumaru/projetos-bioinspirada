@@ -92,8 +92,8 @@ class SGA8Queens(object):
         # Find the two individuals with the lowest fitness value.
         weakest_solutions = np.argsort(self.pop_fitness)[:2]
         # Replace them by the childs.
-        self.population[weakest_solutions[0]] = c1
-        self.population[weakest_solutions[1]] = c2
+        self.population[weakest_solutions[0]] = c1[:]
+        self.population[weakest_solutions[1]] = c2[:]
         # Update the fitness table.
         self.pop_fitness[weakest_solutions[0]] = self.fitness(c1)
         self.pop_fitness[weakest_solutions[1]] = self.fitness(c2)
