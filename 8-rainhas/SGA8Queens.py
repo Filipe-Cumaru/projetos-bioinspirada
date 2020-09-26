@@ -120,4 +120,8 @@ class SGA8Queens(object):
             c1 = self.mutate(c1)
             c2 = self.mutate(c2)
             self.update_population(c1, c2)
-    
+
+        report = {'num fitness eval': self.num_fitness_eval, \
+            'solution': self.population[self.pop_fitness.argmax()]}
+        
+        return report
