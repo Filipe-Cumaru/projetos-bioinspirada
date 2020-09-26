@@ -147,7 +147,21 @@ class SGA8Queens(object):
         return p1, p2
     
     def roulette_selection(self):
-        pass
+        rng = np.random.default_rng()
+        fitness_sum = self.pop_fitness.sum()
+        parents = []
+
+        for i in range(2):
+            rand_val = rng.random()
+            cum_prob = 0.0
+            for f, index in zip(self.pop_fitness, np.arange(self.pop_size)):
+                if rand_val < cum_prob + (f / fitness_sum):
+                    parents.append(self.population[index])
+                    break
+                cum_prob += f / fitness_sum
+        
+        return parents
+
 
     # #########################
 
