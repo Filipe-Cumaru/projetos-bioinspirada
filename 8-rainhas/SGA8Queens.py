@@ -1,7 +1,7 @@
 import numpy as np
 
 class SGA8Queens(object):
-    def __init__(self, crossover_prob=0.9, mutation_prob=0.4, pop_size=100):
+    def __init__(self, crossover_prob=0.9, mutation_prob=0.4, pop_size=100, use_binary_rep=False):
         # Crossover probability.
         self.p_c = crossover_prob
 
@@ -15,6 +15,9 @@ class SGA8Queens(object):
 
         # Number of evaluations of the fitness function.
         self.num_fitness_eval = 0
+
+        # Use binary string representation for population.
+        self.use_binary_rep = use_binary_rep
 
     def fitness(self, table):
         # Based on https://bit.ly/32zycds.
@@ -30,10 +33,13 @@ class SGA8Queens(object):
         f_sdiag = np.zeros(16)
 
         for i in range(N):
-            int_gene = int(table[i], 2)
-            f_row[int_gene - 1] += 1
-            f_mdiag[int_gene + i - 1] += 1
-            f_sdiag[N - int_gene + i - 1] += 1
+            if self.use_binary_rep:
+                queen_pos = int(table[i], 2)
+            else:
+                queen_pos = table[i]
+            f_row[queen_pos - 1] += 1
+            f_mdiag[queen_pos + i - 1] += 1
+            f_sdiag[N - queen_pos + i - 1] += 1
         
         for i in range(2*N):
             x, y, z = 0, 0, 0
@@ -102,8 +108,14 @@ class SGA8Queens(object):
     
     def random_init_population(self):
         rng = np.random.default_rng()
-        self.population = [self._to_binary_string(rng.permutation(np.arange(1, 9))) \
-            for i in range(self.pop_size)]
+
+        if self.use_binary_rep:
+            self.population = [self._to_binary_string(rng.permutation(np.arange(1, 9))) \
+                for i in range(self.pop_size)]
+        else:
+            self.population = [list(rng.permutation(np.arange(1, 9))) \
+                for i in range(self.pop_size)]
+        
         self.pop_fitness = np.array([self.fitness(x) for x in self.population])
     
     def _to_binary_string(self, int_p):
