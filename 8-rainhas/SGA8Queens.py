@@ -55,6 +55,7 @@ class SGA8Queens(object):
         # Find the two candidates with the highest fitness.
         candidates_fitness = np.array([self.fitness(x) for x in candidates])
         p1, p2 = candidates[np.argsort(-candidates_fitness)[:2]]
+        p1, p2 = list(p1), list(p2)
         return p1, p2
 
     def cut_and_crossfill_crossover(self, p1, p2):
@@ -86,7 +87,7 @@ class SGA8Queens(object):
         if rng.uniform() < self.p_m:
             i, j = rng.choice(8, size=2, replace=False)
             child[i], child[j] = child[j], child[i]
-        
+
         return child
 
     def update_population(self, c1, c2):
