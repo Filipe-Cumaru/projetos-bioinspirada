@@ -30,9 +30,10 @@ class SGA8Queens(object):
         f_sdiag = np.zeros(16)
 
         for i in range(N):
-            f_row[table[i] - 1] += 1
-            f_mdiag[table[i] + i - 1] += 1
-            f_sdiag[N - table[i] + i - 1] += 1
+            int_gene = int(table[i], 2)
+            f_row[int_gene - 1] += 1
+            f_mdiag[int_gene + i - 1] += 1
+            f_sdiag[N - int_gene + i - 1] += 1
         
         for i in range(2*N):
             x, y, z = 0, 0, 0
@@ -56,11 +57,11 @@ class SGA8Queens(object):
         p1, p2 = candidates[np.argsort(-candidates_fitness)[:2]]
         return p1, p2
 
-    def crossover(self, p1, p2):
+    def cut_and_crossfill_crossover(self, p1, p2):
         # Implementation of a cut and crossfill crossover.
         rng = np.random.default_rng()
-        c1 = np.zeros(8, dtype="int64")
-        c2 = np.zeros(8, dtype="int64")
+        c1 = 8*['']
+        c2 = 8*['']
 
         if rng.uniform() < self.p_c:
             i = rng.choice(8)
@@ -97,15 +98,26 @@ class SGA8Queens(object):
         # Update the fitness table.
         self.pop_fitness[weakest_solutions[0]] = self.fitness(c1)
         self.pop_fitness[weakest_solutions[1]] = self.fitness(c2)
+    
+    def random_init_population(self):
+        rng = np.random.default_rng()
+        self.population = [self._to_binary_string(rng.permutation(np.arange(1, 9))) \
+            for i in range(self.pop_size)]
+        self.pop_fitness = np.array([self.fitness(x) for x in self.population])
+    
+    def _to_binary_string(self, int_p):
+        # The format string: convert the argument to a 3-bit binary filling
+        # the bits to the left with zeros if unused.
+        bin_p = ['{0:03b}'.format(gene) for gene in int_p]
+        return bin_p
 
     def run(self):
-        rng = np.random.default_rng()
-        self.population = [rng.permutation(np.arange(1, 9)) for i in range(self.pop_size)]
-        self.pop_fitness = np.array([self.fitness(x) for x in self.population])
+        self.random_init_population()
 
         while self.num_fitness_eval < 10000 and self.pop_fitness.max() < 1:
             p1, p2 = self.select_parents()
-            c1, c2 = self.crossover(p1, p2)
+            c1, c2 = self.cut_and_crossfill_crossover(p1, p2)
             c1 = self.mutate(c1)
             c2 = self.mutate(c2)
             self.update_population(c1, c2)
+    
