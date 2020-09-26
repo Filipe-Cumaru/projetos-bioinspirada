@@ -41,6 +41,8 @@ class SGA8Queens(object):
             self.mutate = self.insert_mutation
         elif mutation_method == 3:
             self.mutate = self.scramble_mutation
+        elif mutation_method == 4:
+            self.mutate = self.inversion_mutation
         else:
             raise ValueError("Invalid option value for the mutation method.")
         
@@ -234,6 +236,19 @@ class SGA8Queens(object):
             np.random.shuffle(shuffled_interval)
             # Scramble the genes from i to j.
             child = child[:i] + shuffled_interval + child[j+1:]
+        
+        return child
+    
+    def inversion_mutation(self, child):
+        rng = np.random.default_rng()
+
+        if rng.uniform() < self.p_m:
+            i, j = rng.choice(8, size=2, replace=False)
+            if j < i:
+                i, j = j, i
+            reversed_chunk = child[i:j+1]
+            reversed_chunk.reverse()
+            child = child[:i] + reversed_chunk + child[j+1:]
         
         return child
 
