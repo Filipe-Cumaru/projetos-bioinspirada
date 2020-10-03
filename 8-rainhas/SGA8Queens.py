@@ -137,6 +137,7 @@ class SGA8Queens(object):
 
         report = {'num fitness eval': self.num_fitness_eval, \
             'convergence': self.pop_fitness.max() == 1, \
+            'num solutions': len([p for p in self.pop_fitness if p == self.pop_fitness.max()]), \
             'solution': self.population[self.pop_fitness.argmax()]}
         
         return report
