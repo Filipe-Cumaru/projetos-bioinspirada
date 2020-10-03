@@ -59,7 +59,7 @@ class SGA8Queens(object):
         # strategy, and 2 for generation approach.
         if survivor_sel_method == 1:
             self.select_survivors = self.replace_worst
-        elif parents_sel_method == 2:
+        elif survivor_sel_method == 2:
             self.select_survivors = self.replace_parents_by_childs
         else:
             raise ValueError("Invalid option value for the survivor selection method.")
