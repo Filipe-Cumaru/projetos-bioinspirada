@@ -33,8 +33,7 @@ class SGA8Queens(object):
         else:
             raise ValueError("Invalid option value for the recombination method.")
         
-        # Set mutation method. 1 for gene switch.
-        # TODO: add other methods.
+        # Set mutation method.
         if mutation_method == 1:
             self.mutate = self.swap_mutation
         elif mutation_method == 2:
@@ -56,7 +55,7 @@ class SGA8Queens(object):
             raise ValueError("Invalid option value for the parents selection method.")
 
         # Set survivor selection method. Value 1 for replacement of the worst
-        # strategy, and 2 for generation approach.
+        # strategy, and 2 for generation based approach.
         if survivor_sel_method == 1:
             self.select_survivors = self.replace_worst
         elif survivor_sel_method == 2:
@@ -131,6 +130,7 @@ class SGA8Queens(object):
             self.select_survivors(c1, c2, p1, p2)
 
         report = {'num fitness eval': self.num_fitness_eval, \
+            'convergence': self.pop_fitness.max() == 1, \
             'solution': self.population[self.pop_fitness.argmax()]}
         
         return report
