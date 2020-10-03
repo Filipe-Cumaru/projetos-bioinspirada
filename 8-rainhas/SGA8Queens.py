@@ -32,6 +32,10 @@ class SGA8Queens(object):
             self.recombine = self.cut_and_crossfill_crossover
         elif recombination_method == 2:
             self.recombine = self.pmx_crossover
+        elif recombination_method == 3:
+            self.recombine = self.edge_crossover
+        elif recombination_method == 4:
+            self.recombine = self.cyclic_crossover
         else:
             raise ValueError("Invalid option value for the recombination method.")
         
@@ -249,6 +253,40 @@ class SGA8Queens(object):
             c1, c2 = p1[:], p2[:]
         
         return c1, c2
+
+    def edge_crossover(self, p1, p2):
+        pass
+
+    def cyclic_crossover(self, p1, p2):
+        rng = np.random.default_rng()
+        c1, c2 = 8*[0], 8*[0]
+
+        if rng.uniform() < self.p_c:
+            turn = 0
+            while 0 in c1 or 0 in c2:
+                start_i = c1.index(0)
+                if turn == 0:
+                    c1[start_i] = p1[start_i]
+                    c2[start_i] = p2[start_i]
+                else:
+                    c1[start_i] = p2[start_i]
+                    c2[start_i] = p1[start_i]
+                
+                curr_i = p1.index(p2[start_i])
+                while curr_i != start_i:
+                    if turn == 0:
+                        c1[curr_i] = p1[curr_i]
+                        c2[curr_i] = p2[curr_i]
+                    else:
+                        c1[curr_i] = p2[curr_i]
+                        c2[curr_i] = p1[curr_i]
+                    curr_i = p1.index(p2[curr_i])
+                turn = (turn + 1) % 2
+        else:
+            c1, c2 = p1[:], p2[:]
+        
+        return c1, c2
+
 
     # #########################
 
