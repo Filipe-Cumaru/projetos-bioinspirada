@@ -30,6 +30,8 @@ class SGA8Queens(object):
         # TODO: add other methods.
         if recombination_method == 1:
             self.recombine = self.cut_and_crossfill_crossover
+        elif recombination_method == 2:
+            self.recombine = self.pmx_crossover
         else:
             raise ValueError("Invalid option value for the recombination method.")
         
@@ -196,6 +198,58 @@ class SGA8Queens(object):
         
         return c1, c2
     
+    def pmx_crossover(self, p1, p2):
+        rng = np.random.default_rng()
+        c1, c2 = 8*[0], 8*[0]
+
+        if rng.uniform() < self.p_c:
+            # Choose two random crossover points.
+            i, j = rng.choice(8, size=2, replace=False)
+            if i > j:
+                i, j = j, i
+
+            # Copy segments to children.
+            c1[i:j+1], c2[i:j+1] = p1[i:j+1], p2[i:j+1]
+
+            # For each allele in the segment...
+            for k in range(i, j+1):
+                # If it is not in the segment of the other parent...
+                if p2[k] not in p1[i:j+1]:
+                    # ... and the corresponding allele itself is not
+                    # in p2's segment, then place this allele at the 
+                    # position where it is in p2.
+                    if p1[k] not in p2[i:j+1]:
+                        c1[p2.index(p1[k])] = p2[k]
+                    else:
+                        # Find the next position that does not contain
+                        # an allele in both segments.
+                        it = p2.index(p1[k])
+                        while p1[it] in p2[i:j+1]:
+                            it = p2.index(p1[it])
+                        it = p2.index(p1[it])
+                        c1[it] = p2[k]
+                # Analogous for the second child.
+                if p1[k] not in p2[i:j+1]:
+                    if p2[k] not in p1[i:j+1]:
+                        c2[p1.index(p2[k])] = p1[k]
+                    else:
+                        it = p1.index(p2[k])
+                        while p2[it] in p1[i:j+1]:
+                            it = p1.index(p2[it])
+                        it = p1.index(p2[it])
+                        c2[it] = p1[k]
+            
+            # Fill the remaining positions.
+            for k in range(8):
+                if c1[k] == 0:
+                    c1[k] = p2[k]
+                if c2[k] == 0:
+                    c2[k] = p1[k]
+        else:
+            c1, c2 = p1[:], p2[:]
+        
+        return c1, c2
+
     # #########################
 
     # #################
