@@ -60,7 +60,7 @@ class SGA8Queens(object):
         if survivor_sel_method == 1:
             self.select_survivors = self.replace_worst
         elif parents_sel_method == 2:
-            self.select_survivors = self.generational
+            self.select_survivors = self.replace_parents_by_childs
         else:
             raise ValueError("Invalid option value for the survivor selection method.")
 
@@ -128,7 +128,7 @@ class SGA8Queens(object):
             c1, c2 = self.recombine(p1, p2)
             c1 = self.mutate(c1)
             c2 = self.mutate(c2)
-            self.select_survivors(c1, c2)
+            self.select_survivors(c1, c2, p1, p2)
 
         report = {'num fitness eval': self.num_fitness_eval, \
             'solution': self.population[self.pop_fitness.argmax()]}
@@ -167,7 +167,6 @@ class SGA8Queens(object):
                 cum_prob += f / fitness_sum
         
         return parents
-
 
     # #########################
 
@@ -258,7 +257,7 @@ class SGA8Queens(object):
     # SURVIVOR SELECTION METHODS
     # ###########################
 
-    def replace_worst(self, c1, c2):
+    def replace_worst(self, c1, c2, p1, p2):
         # Find the two individuals with the lowest fitness value.
         weakest_solutions = np.argsort(self.pop_fitness)[:2]
         # Replace them by the childs.
@@ -268,7 +267,10 @@ class SGA8Queens(object):
         self.pop_fitness[weakest_solutions[0]] = self.fitness(c1)
         self.pop_fitness[weakest_solutions[1]] = self.fitness(c2)
 
-    def generational(self, childs):
-        pass
+    def replace_parents_by_childs(self, c1, c2, p1, p2):
+        p1_index = self.population.index(p1)
+        p2_index = self.population.index(p2)
+        self.population[p1_index] = c1[:]
+        self.population[p2_index] = c2[:]
 
     # #########################
