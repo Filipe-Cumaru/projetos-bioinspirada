@@ -290,7 +290,6 @@ class SGA8Queens(object):
 
         return table
 
-    # TODO: confirm if this will work with a string of bits
     def edge_crossover(self, p1, p2):
         rng = np.random.default_rng()
         children = []
@@ -327,7 +326,7 @@ class SGA8Queens(object):
                 element = rng.choice(elements_with_smallest_list)[0]
             else:
                 remaining_elements = set(edge_table.keys()) - set(current_child)
-                element = rng.choice(remaining_elements)
+                element = rng.choice(list(remaining_elements))
 
             return element
 
