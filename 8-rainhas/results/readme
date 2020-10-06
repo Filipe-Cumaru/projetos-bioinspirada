@@ -1,0 +1,24 @@
+PRIMEIRO GRUPO DE RESULTADOS
+base.csv
+    - Execução como proposta na primeira parte da especificação.
+
+base_pc_100_pm_80.csv
+    - Execução base com probabilidade de recombinação de 100%
+    e probabilidade de mutação de 80%.
+    - Melhor das três comparações entre os resultados base.
+
+base_pc_80_pm_5.csv
+    - Execução base com probabilidade de recombinação de 80%
+    e probabilidade de mutação de 5%. Baseado nas sugestões de valores
+    do livro.
+
+SEGUNDO GRUPO DE RESULTADOS (modificações no tamanho da população com p_c = 1.0 e p_m = 0.8)
+base_pc_100_pm_80_pop_50.csv
+base_pc_100_pm_80_pop_20.csv
+base_pc_100_pm_80_pop_200.csv
+    - Baseados nas recomendações do livro (população da ordem das dezenas no máximo poucas centenas).
+    - Melhor: pop = 200
+
+TERCEIRO GRUPO DE RESULTADOS (modificações no método de recombinação)
+pmx_pc_100_pm_80_pop_200.csv
+cyclic_pc_100_pm_80_pop_200.csv
