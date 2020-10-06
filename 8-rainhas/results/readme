@@ -13,6 +13,7 @@ base_pc_80_pm_5.csv
     do livro.
 
 SEGUNDO GRUPO DE RESULTADOS (modificações no tamanho da população com p_c = 1.0 e p_m = 0.8)
+base_pc_100_pm_80.csv
 base_pc_100_pm_80_pop_50.csv
 base_pc_100_pm_80_pop_20.csv
 base_pc_100_pm_80_pop_200.csv
@@ -20,7 +21,34 @@ base_pc_100_pm_80_pop_200.csv
     - Melhor: pop = 200
 
 TERCEIRO GRUPO DE RESULTADOS (modificações no método de recombinação)
+base_pc_100_pm_80_pop_200.csv
 pmx_pc_100_pm_80_pop_200.csv
 cyclic_pc_100_pm_80_pop_200.csv
 edge_pc_100_pm_80_pop_200.csv
     - Melhor resultado com PMX. Motivo: preserva melhor as vizinhanças?
+
+QUARTO GRUPO DE RESULTADOS (modificações na mutação)
+pmx_pc_100_pm_80_pop_200.csv
+pmx_insert_pc_100_pm_80_pop_200.csv
+pmx_inversion_pc_100_pm_80_pop_200.csv
+pmx_scramble_pc_100_pm_80_pop_200.csv
+    - Melhor: swap (o método default).
+      Possível explicação: método menos destrutivo. Como nós já conseguimos melhorar 
+      bastante modificando os demais parâmetros, o ideal é preservar as mudanças 
+      introduzindo modificações mínimas somente para estimular a diversidade da
+      população.
+
+QUINTO GRUPO DE RESULTADOS (métodos de seleção de pais)]
+pmx_pc_100_pm_80_pop_200.csv
+pmx_roulette_pc_100_pm_80_pop_200.csv
+    - Melhor: selecionar 2 melhores de 5 aleatórios.
+      Explicação: apesar de existirem várias soluções, todas possuem o mesmo valor ótimo. Assim,
+      não há problema em cair num ótimo local pois todos os ótimos são globais. Podemos, então,
+      ser eilitistas e privilegiar a seleção por fitness mais elevado.
+
+SEXTO GRUPO DE RESULTADOS (métodos de sobrevivência)
+pmx_pc_100_pm_80_pop_200.csv
+pmx_generational_pc_100_pm_80_pop_200.csv
+    - Melhor: seleção do mais apto.
+      Explicação: a mesma da seleção dos pais. Devido à natureza do problema, podemos
+      ser bastante elitistas na seleção.
