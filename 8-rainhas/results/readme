@@ -22,3 +22,5 @@ base_pc_100_pm_80_pop_200.csv
 TERCEIRO GRUPO DE RESULTADOS (modificações no método de recombinação)
 pmx_pc_100_pm_80_pop_200.csv
 cyclic_pc_100_pm_80_pop_200.csv
+edge_pc_100_pm_80_pop_200.csv
+    - Melhor resultado com PMX. Motivo: preserva melhor as vizinhanças?
