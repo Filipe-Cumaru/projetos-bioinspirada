@@ -1,14 +1,18 @@
 import numpy as np
+from typing import Dict, List
+from functools import reduce
+from collections import Counter
+
 
 class SGA8Queens(object):
-    def __init__(self, crossover_prob=0.9, \
-                    mutation_prob=0.4, \
-                    pop_size=100, \
-                    use_binary_rep=False, \
-                    recombination_method=1, \
-                    mutation_method=1, \
-                    parents_sel_method=1, \
-                    survivor_sel_method=1):
+    def __init__(self, crossover_prob=0.9,
+                 mutation_prob=0.4,
+                 pop_size=100,
+                 use_binary_rep=False,
+                 recombination_method=1,
+                 mutation_method=1,
+                 parents_sel_method=1,
+                 survivor_sel_method=1):
         # Crossover probability.
         self.p_c = crossover_prob
 
@@ -37,8 +41,9 @@ class SGA8Queens(object):
         elif recombination_method == 4:
             self.recombine = self.cyclic_crossover
         else:
-            raise ValueError("Invalid option value for the recombination method.")
-        
+            raise ValueError(
+                "Invalid option value for the recombination method.")
+
         # Set mutation method.
         if mutation_method == 1:
             self.mutate = self.swap_mutation
@@ -50,7 +55,7 @@ class SGA8Queens(object):
             self.mutate = self.inversion_mutation
         else:
             raise ValueError("Invalid option value for the mutation method.")
-        
+
         # Set parent selection method. Value 1 for best 2 out of random 5, and 2
         # for roulette.
         if parents_sel_method == 1:
@@ -58,7 +63,8 @@ class SGA8Queens(object):
         elif parents_sel_method == 2:
             self.select_parents = self.roulette_selection
         else:
-            raise ValueError("Invalid option value for the parents selection method.")
+            raise ValueError(
+                "Invalid option value for the parents selection method.")
 
         # Set survivor selection method. Value 1 for replacement of the worst
         # strategy, and 2 for generation based approach.
@@ -67,7 +73,8 @@ class SGA8Queens(object):
         elif survivor_sel_method == 2:
             self.select_survivors = self.replace_parents_by_childs
         else:
-            raise ValueError("Invalid option value for the survivor selection method.")
+            raise ValueError(
+                "Invalid option value for the survivor selection method.")
 
     # #########################
     # COMMON METHODS AND UTILS
@@ -94,7 +101,7 @@ class SGA8Queens(object):
             f_row[queen_pos - 1] += 1
             f_mdiag[queen_pos + i - 1] += 1
             f_sdiag[N - queen_pos + i - 1] += 1
-        
+
         for i in range(2*N):
             x, y, z = 0, 0, 0
             if i < N:
@@ -102,24 +109,24 @@ class SGA8Queens(object):
             y = f_mdiag[i]
             z = f_sdiag[i]
             result += ((x * (x - 1)) + (y * (y - 1)) + (z * (z - 1))) / 2
-        
+
         self.num_fitness_eval += 1
-        
+
         return 1 / (result + eps)
 
     def random_init_population(self):
         rng = np.random.default_rng()
 
         if self.use_binary_rep:
-            self.population = [self._to_binary_string(rng.permutation(np.arange(1, 9))) \
-                for i in range(self.pop_size)]
+            self.population = [self._to_binary_string(rng.permutation(np.arange(1, 9)))
+                               for i in range(self.pop_size)]
         else:
             self.population = [list(rng.permutation(np.arange(1, 9))) \
                 for i in range(self.pop_size)]
         
         self.num_fitness_eval = 0
         self.pop_fitness = np.array([self.fitness(x) for x in self.population])
-    
+
     def _to_binary_string(self, int_p):
         # The format string: convert the argument to a 3-bit binary filling
         # the bits to the left with zeros if unused.
@@ -146,7 +153,7 @@ class SGA8Queens(object):
         }
         
         return report
-    
+
     # ########################
 
     # #########################
@@ -163,7 +170,7 @@ class SGA8Queens(object):
         p1, p2 = candidates[np.argsort(-candidates_fitness)[:2]]
         p1, p2 = list(p1), list(p2)
         return p1, p2
-    
+
     def roulette_selection(self):
         rng = np.random.default_rng()
         fitness_sum = self.pop_fitness.sum()
@@ -177,7 +184,7 @@ class SGA8Queens(object):
                     parents.append(self.population[index])
                     break
                 cum_prob += f / fitness_sum
-        
+
         return parents
 
     # #########################
@@ -205,9 +212,9 @@ class SGA8Queens(object):
                     it2 += 1
         else:
             c1, c2 = p1[:], p2[:]
-        
+
         return c1, c2
-    
+
     def pmx_crossover(self, p1, p2):
         rng = np.random.default_rng()
         c1, c2 = 8*[0], 8*[0]
@@ -226,7 +233,7 @@ class SGA8Queens(object):
                 # If it is not in the segment of the other parent...
                 if p2[k] not in p1[i:j+1]:
                     # ... and the corresponding allele itself is not
-                    # in p2's segment, then place this allele at the 
+                    # in p2's segment, then place this allele at the
                     # position where it is in p2.
                     if p1[k] not in p2[i:j+1]:
                         c1[p2.index(p1[k])] = p2[k]
@@ -248,7 +255,7 @@ class SGA8Queens(object):
                             it = p1.index(p2[it])
                         it = p1.index(p2[it])
                         c2[it] = p1[k]
-            
+
             # Fill the remaining positions.
             for k in range(8):
                 if c1[k] == 0:
@@ -257,11 +264,95 @@ class SGA8Queens(object):
                     c2[k] = p1[k]
         else:
             c1, c2 = p1[:], p2[:]
-        
+
         return c1, c2
 
+    def _edge_table(self, p1=[], p2=[]):
+        table = {}
+
+        for index in range(1, len(p1) + 1):
+            edges = []
+            p1_index = p1.index(index)
+            prev_index = p1_index - 1
+            next_index = (p1_index + 1) % len(p1)
+            edges.append(p1[prev_index])
+            edges.append(p1[next_index])
+
+            p2_index = p2.index(index)
+            prev_index = p2_index - 1
+            next_index = (p2_index + 1) % len(p2)
+            edges.append(p2[prev_index])
+            edges.append(p2[next_index])
+
+            edges.sort()
+
+            table[index] = edges
+
+        return table
+
+    # TODO: confirm if this will work with a string of bits
     def edge_crossover(self, p1, p2):
-        pass
+        rng = np.random.default_rng()
+        children = []
+
+        def select_next(edge_table: Dict[int, List[int]], current_key: int, current_child: List[int]):
+            element = None
+            if (len(edge_table[current_key]) > 0): 
+                elements_counter = Counter(edge_table[current_key])
+                most_common = elements_counter.most_common(2)
+                with_common_edges = list(filter(lambda x: x[1] == 2, most_common))
+
+                # If there is only one element and it appears twice (i.e. a common edge), return it
+                if len(with_common_edges) == 1:
+                    return most_common[0][0]
+
+                elif len(with_common_edges) > 1:
+                    return rng.choice(most_common)[0]
+
+                # Lengths of the lists of all elements in the current current element list
+                lists_length = list(
+                    map(
+                        lambda x: (x, len(set(edge_table[x]))),
+                        edge_table[current_key]
+                    )
+                )
+
+                # sort tuples by list length in asc order
+                lists_length.sort(key=lambda x: x[1])
+                smallest_length = lists_length[0][1]
+
+                elements_with_smallest_list = list(
+                    filter(lambda x: x[1] == smallest_length, lists_length))
+
+                element = rng.choice(elements_with_smallest_list)[0]
+            else:
+                remaining_elements = set(edge_table.keys()) - set(current_child)
+                element = rng.choice(remaining_elements)
+
+            return element
+
+        if rng.uniform() < self.p_c:
+            # Create two children:
+            for _ in range(2):
+                edge_table = self._edge_table(p1, p2)
+                # Pick a random element as the first one in the child
+                child = [rng.choice(p1)]
+                # child = [1]
+                curr_el = rng.choice(child)
+
+                while len(child) < len(p1):
+                    for key in edge_table:
+                        edge_table[key] = list(
+                            filter(lambda x: x != curr_el, edge_table[key]))
+                    curr_el = select_next(edge_table, curr_el, child)
+                    child.append(curr_el)
+
+                children.append(child)
+
+        else:
+            children = [p1[:], p2[:]]
+
+        return children[0], children[1]
 
     def cyclic_crossover(self, p1, p2):
         rng = np.random.default_rng()
@@ -277,7 +368,7 @@ class SGA8Queens(object):
                 else:
                     c1[start_i] = p2[start_i]
                     c2[start_i] = p1[start_i]
-                
+
                 curr_i = p1.index(p2[start_i])
                 while curr_i != start_i:
                     if turn == 0:
@@ -290,9 +381,8 @@ class SGA8Queens(object):
                 turn = (turn + 1) % 2
         else:
             c1, c2 = p1[:], p2[:]
-        
-        return c1, c2
 
+        return c1, c2
 
     # #########################
 
@@ -309,7 +399,7 @@ class SGA8Queens(object):
             child[i], child[j] = child[j], child[i]
 
         return child
-    
+
     def insert_mutation(self, child):
         rng = np.random.default_rng()
 
@@ -319,9 +409,9 @@ class SGA8Queens(object):
                 i, j = j, i
             # The idea here is to move the jth gene close to the ith gene.
             child = child[:i+1] + [child[j]] + child[i+1:j] + child[j+1:]
-        
+
         return child
-    
+
     def scramble_mutation(self, child):
         rng = np.random.default_rng()
 
@@ -333,9 +423,9 @@ class SGA8Queens(object):
             np.random.shuffle(shuffled_interval)
             # Scramble the genes from i to j.
             child = child[:i] + shuffled_interval + child[j+1:]
-        
+
         return child
-    
+
     def inversion_mutation(self, child):
         rng = np.random.default_rng()
 
@@ -346,7 +436,7 @@ class SGA8Queens(object):
             reversed_chunk = child[i:j+1]
             reversed_chunk.reverse()
             child = child[:i] + reversed_chunk + child[j+1:]
-        
+
         return child
 
     # #########################
