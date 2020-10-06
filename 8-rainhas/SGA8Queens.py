@@ -117,6 +117,7 @@ class SGA8Queens(object):
             self.population = [list(rng.permutation(np.arange(1, 9))) \
                 for i in range(self.pop_size)]
         
+        self.num_fitness_eval = 0
         self.pop_fitness = np.array([self.fitness(x) for x in self.population])
     
     def _to_binary_string(self, int_p):
@@ -127,6 +128,7 @@ class SGA8Queens(object):
 
     def run(self):
         self.random_init_population()
+        num_iter = 0
 
         while self.num_fitness_eval < 10000 and self.pop_fitness.max() < 1:
             p1, p2 = self.select_parents()
@@ -134,11 +136,14 @@ class SGA8Queens(object):
             c1 = self.mutate(c1)
             c2 = self.mutate(c2)
             self.select_survivors(c1, c2, p1, p2)
+            num_iter += 1
 
-        report = {'num fitness eval': self.num_fitness_eval, \
+        report = {
             'convergence': self.pop_fitness.max() == 1, \
-            'num solutions': len([p for p in self.pop_fitness if p == self.pop_fitness.max()]), \
-            'solution': self.population[self.pop_fitness.argmax()]}
+            'iterations': num_iter, \
+            'fitness evaluations': self.num_fitness_eval, \
+            'average fitness': np.average(self.pop_fitness)
+        }
         
         return report
     
