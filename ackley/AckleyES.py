@@ -26,7 +26,7 @@ class AckleyES(object):
         mutation_steps = rng.random((self.population_size, self.n))
         # Each individual is a tuple containing a candidate solution
         # and its mutation_steps.
-        self.population = zip(solutions, mutation_steps)
+        self.population = list(zip(solutions, mutation_steps))
         self.pop_fitness = np.array([self.fitness(i) for i, _ in self.population])
         self.num_fitness_eval = 0
     
@@ -40,9 +40,46 @@ class AckleyES(object):
 
     def recombine(self):
         """
-        docstring
+        Generate an offspring from the current population.
+        It first generates the candidate solutions then 
+        the mutation parameters.
         """
-        pass
+        candidates = self.recombine_solutions()
+        mutation_parameters = self.recombine_parameters()
+        offspring = list(zip(candidates, mutation_parameters))
+        return offspring
+    
+    def recombine_solutions(self):
+        """
+        Recombination of the solution vector of an individual.
+        We use a global discrete recombination scheme.
+        """
+        rng = np.random.default_rng()
+        pop_solutions = np.array([sol for sol, _ in self.population])
+        offspring_solutions = []
+        cols = np.arange(self.n)
+        for _ in range(self.offspring_size):
+            rows = rng.permutation(self.n)
+            new_solution = pop_solutions[rows, cols]
+            offspring_solutions.append(new_solution)
+        
+        return offspring_solutions
+    
+    def recombine_parameters(self):
+        """
+        Recombination of the mutation parameters of an individual.
+        We use a local whole arithmetical recombination scheme.
+        """
+        alpha = 0.6
+        pop_parameters = np.array([param for _, param in self.population])
+        offspring_parameters = []
+        for _ in range(int(self.offspring_size / 2)):
+            rows = np.choice(np.arange(self.population_size), size=2, replace=False)
+            p1, p2 = pop_parameters[rows]
+            x1, x2 = alpha*p1 + (1 - alpha)*p2, alpha*p2 + (1 - alpha)*p1
+            offspring_parameters.extend((x1, x2))
+        
+        return offspring_parameters
 
     def mutate(self):
         """
