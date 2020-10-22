@@ -1,19 +1,19 @@
 import numpy as np
 
 class AckleyES(object):
-    def __init__(self, crossover_prob=0.9, mutation_prob=0.4, pop_size=100):
+    def __init__(self, crossover_prob=0.9, mutation_prob=1.0, pop_size=30, offspring_size=200):
         self.p_c = crossover_prob
         self.p_m = mutation_prob
         self.population_size = pop_size
+        self.offspring_size = offspring_size
         self.population = None
-        self.mutation_steps = None
         self.pop_fitness = None
         self.num_fitness_eval = 0
         self.n = 30
     
     def run(self, parameter_list):
         """
-        docstring
+        Main function. Runs the evolutionary strategy algorithm.
         """
         pass
 
@@ -22,9 +22,12 @@ class AckleyES(object):
         Randomly initialize the population.
         """
         rng = np.random.default_rng()
-        self.population = rng.uniform(-15, 15, (self.population_size, self.n))
-        self.mutation_steps = rng.random((self.population_size, self.n))
-        self.pop_fitness = np.array([self.fitness(i) for i in self.population])
+        solutions = rng.uniform(-15, 15, (self.population_size, self.n))
+        mutation_steps = rng.random((self.population_size, self.n))
+        # Each individual is a tuple containing a candidate solution
+        # and its mutation_steps.
+        self.population = zip(solutions, mutation_steps)
+        self.pop_fitness = np.array([self.fitness(i) for i, _ in self.population])
         self.num_fitness_eval = 0
     
     def fitness(self, candidate):
@@ -47,15 +50,21 @@ class AckleyES(object):
         """
         pass
 
-    def select_survivors(self):
+    def select_survivors(self, offspring):
         """
         Deterministic and elitist survivor selection by
-        replacing individuals by the offspring.
+        replacing the current individuals by the µ best
+        individuals from the offspring, a.k.a, a (µ,λ) scheme.
         """
-        pass
+        # Compute the fitness for each child and select the best ones.
+        offspring_fitness = np.array([self.fitness(i) for i, _ in self.population])
+        best_offspring_indexes = np.argsort(offspring_fitness)[:self.population_size]
+        self.population = offspring[best_offspring_indexes]
 
     def select_parents(self):
         """
-        Select the parents to generate the next offspring.
+        Select a pair of parents for local recombination.
         """
-        pass
+        rng = np.random.default_rng()
+        parents = rng.choice(self.population, 2, replace=False)
+        return parents
