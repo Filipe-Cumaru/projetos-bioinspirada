@@ -58,8 +58,9 @@ class AckleyES(object):
         pop_solutions = np.array([sol for sol, _ in self.population])
         offspring_solutions = []
         cols = np.arange(self.n)
+        indices = np.arange(self.population_size)
         for _ in range(self.offspring_size):
-            rows = rng.permutation(self.n)
+            rows = rng.choice(indices, size=self.n, replace=False)
             new_solution = pop_solutions[rows, cols]
             offspring_solutions.append(new_solution)
         
@@ -70,11 +71,12 @@ class AckleyES(object):
         Recombination of the mutation parameters of an individual.
         We use a local whole arithmetical recombination scheme.
         """
+        rng = np.random.default_rng()
         alpha = 0.6
         pop_parameters = np.array([param for _, param in self.population])
         offspring_parameters = []
         for _ in range(int(self.offspring_size / 2)):
-            rows = np.choice(np.arange(self.population_size), size=2, replace=False)
+            rows = rng.choice(np.arange(self.population_size), size=2, replace=False)
             p1, p2 = pop_parameters[rows]
             x1, x2 = alpha*p1 + (1 - alpha)*p2, alpha*p2 + (1 - alpha)*p1
             offspring_parameters.extend((x1, x2))
@@ -95,8 +97,8 @@ class AckleyES(object):
         """
         # Compute the fitness for each child and select the best ones.
         offspring_fitness = np.array([self.fitness(i) for i, _ in self.population])
-        best_offspring_indexes = np.argsort(offspring_fitness)[:self.population_size]
-        self.population = offspring[best_offspring_indexes]
+        best_offspring_indices = np.argsort(offspring_fitness)[:self.population_size]
+        self.population = offspring[best_offspring_indices]
 
     def select_parents(self):
         """
