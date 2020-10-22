@@ -1,7 +1,7 @@
 import numpy as np
 
 class AckleyES(object):
-    def __init__(self, crossover_prob=0.9, mutation_prob=1.0, pop_size=30, offspring_size=200):
+    def __init__(self, crossover_prob=1.0, mutation_prob=1.0, pop_size=30, offspring_size=200):
         self.p_c = crossover_prob
         self.p_m = mutation_prob
         self.population_size = pop_size
@@ -10,6 +10,9 @@ class AckleyES(object):
         self.pop_fitness = None
         self.num_fitness_eval = 0
         self.n = 30
+        # The learning rates.
+        self.global_lr = 1 / (2*self.n)**0.5
+        self.local_lr = 1 / (2*(self.n)**0.5)**0.5
     
     def run(self, parameter_list):
         """
@@ -83,11 +86,47 @@ class AckleyES(object):
         
         return offspring_parameters
 
-    def mutate(self):
+    def mutate(self, offspring):
         """
-        docstring
+        Introduce changes to the offspring. First we mutate 
+        the parameters then we use them to mutate the solutions.
         """
-        pass
+        solutions = np.array([sol for sol, _ in offspring])
+        parameters = np.array([param for _, param in offspring])
+        mutated_parameters = self.mutate_parameters(solutions)
+        mutated_solutions = self.mutate_solutions(mutated_parameters, solutions)
+        mutated_offspring = list(zip(mutated_solutions, mutated_parameters))
+        return mutated_offspring
+    
+    def mutate_parameters(self, parameters):
+        """
+        Apply a non-correlated mutation with different
+        parameters for each variable.
+        """
+        rng = np.random.default_rng()
+        eps = 1e-3
+
+        # Compute the mutation.
+        gaussian_var = rng.standard_normal(1)[0]
+        gaussian_vector = rng.standard_normal(self.n)
+        A = self.global_lr*gaussian_var
+        B = self.local_lr*gaussian_vector
+        mutated_parameters = parameters*np.exp(A + B)
+
+        # Check if the parameters aren't too small.
+        small_params = mutated_parameters <= eps
+        mutated_parameters[small_params] = eps
+
+        return mutated_parameters
+
+    def mutate_solutions(self, parameters, solutions):
+        """
+        Apply the mutation to the candidate solutions.
+        """
+        rng = np.random.default_rng()
+        gaussian_vector = rng.standard_normal(self.n)
+        mutated_solutions = solutions + parameters*gaussian_vector
+        return mutated_solutions
 
     def select_survivors(self, offspring):
         """
