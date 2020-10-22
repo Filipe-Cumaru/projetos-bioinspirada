@@ -14,11 +14,32 @@ class AckleyES(object):
         self.global_lr = 1 / (2*self.n)**0.5
         self.local_lr = 1 / (2*(self.n)**0.5)**0.5
     
-    def run(self, parameter_list):
+    def run(self):
         """
         Main function. Runs the evolutionary strategy algorithm.
         """
-        pass
+        self.random_init_population()
+        eps = 1 / (1 + 1e-4)
+        num_iter = 1
+        while np.max(self.pop_fitness) < eps and num_iter < 1000:
+            print("[{}] Starting...".format(num_iter))
+            offspring = self.recombine()
+            mutated_offspring = self.mutate(offspring)
+            self.select_survivors(mutated_offspring)
+            if num_iter % 100 == 0:
+                solutions = np.array([sol for sol, _ in self.population])
+                error = np.linalg.norm(solutions, axis=1)
+                import pdb; pdb.set_trace()
+            print("[{}] Done!".format(num_iter))
+            num_iter += 1
+        
+        report = {
+            "convergence": num_iter < 1000,
+            "iterations": num_iter,
+            "min error": (1 / np.max(self.pop_fitness)) + 1
+        }
+
+        return report
 
     def random_init_population(self):
         """
@@ -29,7 +50,7 @@ class AckleyES(object):
         mutation_steps = rng.random((self.population_size, self.n))
         # Each individual is a tuple containing a candidate solution
         # and its mutation_steps.
-        self.population = list(zip(solutions, mutation_steps))
+        self.population = np.array(list(zip(solutions, mutation_steps)))
         self.pop_fitness = np.array([self.fitness(i) for i, _ in self.population])
         self.num_fitness_eval = 0
     
@@ -49,7 +70,7 @@ class AckleyES(object):
         """
         candidates = self.recombine_solutions()
         mutation_parameters = self.recombine_parameters()
-        offspring = list(zip(candidates, mutation_parameters))
+        offspring = np.array(list(zip(candidates, mutation_parameters)))
         return offspring
     
     def recombine_solutions(self):
@@ -67,7 +88,7 @@ class AckleyES(object):
             new_solution = pop_solutions[rows, cols]
             offspring_solutions.append(new_solution)
         
-        return offspring_solutions
+        return np.array(offspring_solutions)
     
     def recombine_parameters(self):
         """
@@ -75,16 +96,17 @@ class AckleyES(object):
         We use a local whole arithmetical recombination scheme.
         """
         rng = np.random.default_rng()
-        alpha = 0.6
+        # alpha = 0.6
         pop_parameters = np.array([param for _, param in self.population])
         offspring_parameters = []
-        for _ in range(int(self.offspring_size / 2)):
+        for _ in range(self.offspring_size):
             rows = rng.choice(np.arange(self.population_size), size=2, replace=False)
             p1, p2 = pop_parameters[rows]
-            x1, x2 = alpha*p1 + (1 - alpha)*p2, alpha*p2 + (1 - alpha)*p1
-            offspring_parameters.extend((x1, x2))
+            # x1, x2 = alpha*p1 + (1 - alpha)*p2, alpha*p2 + (1 - alpha)*p1
+            x = (p1 + p2) / 2
+            offspring_parameters.append(x)
         
-        return offspring_parameters
+        return np.array(offspring_parameters)
 
     def mutate(self, offspring):
         """
@@ -95,7 +117,7 @@ class AckleyES(object):
         parameters = np.array([param for _, param in offspring])
         mutated_parameters = self.mutate_parameters(parameters)
         mutated_solutions = self.mutate_solutions(mutated_parameters, solutions)
-        mutated_offspring = list(zip(mutated_solutions, mutated_parameters))
+        mutated_offspring = np.array(list(zip(mutated_solutions, mutated_parameters)))
         return mutated_offspring
     
     def mutate_parameters(self, parameters):
@@ -108,7 +130,7 @@ class AckleyES(object):
 
         # Compute the mutation.
         gaussian_var = rng.standard_normal(1)[0]
-        gaussian_vector = rng.standard_normal(self.n)
+        gaussian_vector = rng.standard_normal((self.offspring_size, self.n))
         A = self.global_lr*gaussian_var
         B = self.local_lr*gaussian_vector
         mutated_parameters = parameters*np.exp(A + B)
@@ -124,7 +146,7 @@ class AckleyES(object):
         Apply the mutation to the candidate solutions.
         """
         rng = np.random.default_rng()
-        gaussian_vector = rng.standard_normal(self.n)
+        gaussian_vector = rng.standard_normal((self.offspring_size, self.n))
         mutated_solutions = solutions + parameters*gaussian_vector
         return mutated_solutions
 
@@ -136,8 +158,9 @@ class AckleyES(object):
         """
         # Compute the fitness for each child and select the best ones.
         offspring_fitness = np.array([self.fitness(i) for i, _ in self.population])
-        best_offspring_indices = np.argsort(offspring_fitness)[:self.population_size]
+        best_offspring_indices = np.argsort(offspring_fitness)[-self.population_size:]
         self.population = offspring[best_offspring_indices]
+        self.pop_fitness = offspring_fitness[best_offspring_indices]
 
     def select_parents(self):
         """
