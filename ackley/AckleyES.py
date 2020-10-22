@@ -93,7 +93,7 @@ class AckleyES(object):
         """
         solutions = np.array([sol for sol, _ in offspring])
         parameters = np.array([param for _, param in offspring])
-        mutated_parameters = self.mutate_parameters(solutions)
+        mutated_parameters = self.mutate_parameters(parameters)
         mutated_solutions = self.mutate_solutions(mutated_parameters, solutions)
         mutated_offspring = list(zip(mutated_solutions, mutated_parameters))
         return mutated_offspring
