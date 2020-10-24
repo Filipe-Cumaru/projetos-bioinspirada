@@ -1,4 +1,5 @@
 import numpy as np
+from ackley import ackley_function
 
 class AckleyES(object):
     def __init__(self, crossover_prob=1.0, mutation_prob=1.0, pop_size=30, offspring_size=200):
@@ -36,7 +37,7 @@ class AckleyES(object):
         report = {
             "convergence": num_iter < 1000,
             "iterations": num_iter,
-            "min error": (1 / np.max(self.pop_fitness)) - 1
+            "min error": 1 / self.pop_fitness.max() - 1
         }
 
         return report
@@ -58,8 +59,7 @@ class AckleyES(object):
         """
         Fitness function.
         """
-        solution = np.zeros(self.n)
-        error = np.linalg.norm(candidate - solution)
+        error = np.linalg.norm(candidate)
         return 1 / (error + 1)
 
     def recombine(self):
@@ -157,7 +157,7 @@ class AckleyES(object):
         individuals from the offspring, a.k.a, a (µ,λ) scheme.
         """
         # Compute the fitness for each child and select the best ones.
-        offspring_fitness = np.array([self.fitness(i) for i, _ in self.population])
+        offspring_fitness = np.array([self.fitness(i) for i, _ in offspring])
         best_offspring_indices = np.argsort(offspring_fitness)[-self.population_size:]
         self.population = offspring[best_offspring_indices]
         self.pop_fitness = offspring_fitness[best_offspring_indices]
