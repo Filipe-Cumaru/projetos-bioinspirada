@@ -36,7 +36,7 @@ class AckleyES(object):
         report = {
             "convergence": num_iter < 1000,
             "iterations": num_iter,
-            "min error": (1 / np.max(self.pop_fitness)) + 1
+            "min error": (1 / np.max(self.pop_fitness)) - 1
         }
 
         return report
@@ -47,7 +47,7 @@ class AckleyES(object):
         """
         rng = np.random.default_rng()
         solutions = rng.uniform(-15, 15, (self.population_size, self.n))
-        mutation_steps = rng.random((self.population_size, self.n))
+        mutation_steps = rng.uniform(-1, 1, (self.population_size, self.n))
         # Each individual is a tuple containing a candidate solution
         # and its mutation_steps.
         self.population = np.array(list(zip(solutions, mutation_steps)))
