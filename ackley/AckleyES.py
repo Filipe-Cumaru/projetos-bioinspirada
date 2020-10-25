@@ -4,9 +4,7 @@ from ackley import ackley_function
 import matplotlib.pyplot as plt
 
 class AckleyES(object):
-    def __init__(self, crossover_prob=1.0, mutation_prob=1.0, pop_size=30, offspring_size=200):
-        self.p_c = crossover_prob
-        self.p_m = mutation_prob
+    def __init__(self, pop_size=30, offspring_size=200):
         self.population_size = pop_size
         self.offspring_size = offspring_size
         self.population = None
