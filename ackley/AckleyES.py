@@ -54,8 +54,8 @@ class AckleyES(object):
         report = {
             "convergence": num_iter < 100000,
             "iterations": num_iter,
-            "min error": -self.pop_fitness.max(),
-            "error": np.linalg.norm(self.population[index, 0])
+            "min error function": -self.pop_fitness.max(),
+            "min error solution": np.linalg.norm(self.population[index, 0])
         }
 
         return report
