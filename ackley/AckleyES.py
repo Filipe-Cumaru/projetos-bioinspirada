@@ -4,12 +4,14 @@ from ackley import ackley_function
 import matplotlib.pyplot as plt
 
 class AckleyES(object):
-    def __init__(self, pop_size=30, offspring_size=200):
+    def __init__(self, pop_size=30, offspring_size=200, max_iter=200000, tol=-0.01):
         self.population_size = pop_size
         self.offspring_size = offspring_size
         self.population = None
         self.pop_fitness = None
         self.n = 30
+        self.max_iter = max_iter
+        self.tol = tol
         # The learning rates.
         self.global_lr = 1e-1 / (2*self.n)**0.5 # best 1e-1
         self.local_lr = 1e-3 / (2*(self.n)**0.5)**0.5 # best 1e-3
@@ -19,38 +21,17 @@ class AckleyES(object):
         Main function. Runs the evolutionary strategy algorithm.
         """
         self.random_init_population()
-        eps = -0.05
-        num_iter = 1
-        # errors_mean = []
-        # errors_min = []
-        # errors_max = []
-        # errors_std = []
-        # stds = []
-        # curr_sol = self.population[self.pop_fitness.argmax(), 0]
+        num_iter = 0
 
-        while np.max(self.pop_fitness) < eps and num_iter < 100000:
+        while self.pop_fitness.max() < self.tol and num_iter < self.max_iter:
             print("[{}] Starting...".format(num_iter))
             offspring = self.recombine()
             mutated_offspring = self.mutate(offspring)
             self.select_survivors(mutated_offspring)
-            # solutions = np.array([sol for sol, _ in self.population])
-            # error = np.linalg.norm(solutions, axis=1)
-            # errors_mean.append(error.mean())
-            # prev_sol = curr_sol[:]
-            # curr_sol = self.population[self.pop_fitness.argmax(), 0]
-            # if np.linalg.norm(prev_sol - curr_sol) < 1e-4:
-            #     count += 1
-            #     if count == 5:
-            #         print('changed')
-            #         self.population[:, 0] += 1e-2
-            #         count = 0
-            # if num_iter % 100 == 0:
-            #     print(error.min(), error.mean(), np.std(error))
             print("[{}] Done!".format(num_iter))
             num_iter += 1
 
         index = self.pop_fitness.argmax()
-        
         report = {
             "convergence": num_iter < 100000,
             "iterations": num_iter,
