@@ -1,6 +1,11 @@
 import numpy as np
 from ackley import ackley_function
 
+import matplotlib.pyplot as plt
+# plt.plot([1, 2, 3, 4])
+# plt.ylabel('some numbers')
+# plt.show()
+
 class AckleyES(object):
     def __init__(self, crossover_prob=1.0, mutation_prob=1.0, pop_size=30, offspring_size=200):
         self.p_c = crossover_prob
@@ -12,32 +17,58 @@ class AckleyES(object):
         self.num_fitness_eval = 0
         self.n = 30
         # The learning rates.
-        self.global_lr = 1 / (2*self.n)**0.5
-        self.local_lr = 1 / (2*(self.n)**0.5)**0.5
+        self.global_lr = 2e-1 / (2*self.n)**0.5 # best 1e-1
+        self.local_lr = 1e-3 / (2*(self.n)**0.5)**0.5 # best 1e-3
     
     def run(self):
         """
         Main function. Runs the evolutionary strategy algorithm.
         """
         self.random_init_population()
-        eps = 1 / (1 + 1e-4)
+        eps = -0.1
         num_iter = 1
-        while np.max(self.pop_fitness) < eps and num_iter < 1000:
-            print("[{}] Starting...".format(num_iter))
+        errors_mean = []
+        errors_min = []
+        errors_max = []
+        errors_std = []
+        stds = []
+        
+        
+        
+        curr_sol = self.population[self.pop_fitness.argmax(), 0]
+
+        while np.max(self.pop_fitness) < eps and num_iter < 100000:
+            # print("[{}] Starting...".format(num_iter))
             offspring = self.recombine()
             mutated_offspring = self.mutate(offspring)
             self.select_survivors(mutated_offspring)
+            solutions = np.array([sol for sol, _ in self.population])
+            error = np.linalg.norm(solutions, axis=1)
+            errors_mean.append(error.mean())
+
+            prev_sol = curr_sol[:]
+            curr_sol = self.population[self.pop_fitness.argmax(), 0]
+            if np.linalg.norm(prev_sol - curr_sol) < 1e-4:
+                count += 1
+                if count == 5:
+                    print('changed')
+                    self.population[:, 0] += 1e-2
+                    count = 0
+
             if num_iter % 100 == 0:
-                solutions = np.array([sol for sol, _ in self.population])
-                error = np.linalg.norm(solutions, axis=1)
-                import pdb; pdb.set_trace()
-            print("[{}] Done!".format(num_iter))
+                print(error.min(), error.mean(), np.std(error))
+                # plt.plot(errors_mean, 'bo')
+                # plt.ylabel('Erro')
+                # plt.show()
             num_iter += 1
+
+        index = self.pop_fitness.argmax()
         
         report = {
-            "convergence": num_iter < 1000,
+            "convergence": num_iter < 100000,
             "iterations": num_iter,
-            "min error": 1 / self.pop_fitness.max() - 1
+            "min error": -self.pop_fitness.max(),
+            "error": np.linalg.norm(self.population[index, 0])
         }
 
         return report
@@ -48,7 +79,7 @@ class AckleyES(object):
         """
         rng = np.random.default_rng()
         solutions = rng.uniform(-15, 15, (self.population_size, self.n))
-        mutation_steps = rng.uniform(-1, 1, (self.population_size, self.n))
+        mutation_steps = rng.uniform(0, 0.1, (self.population_size, self.n))
         # Each individual is a tuple containing a candidate solution
         # and its mutation_steps.
         self.population = np.array(list(zip(solutions, mutation_steps)))
@@ -59,8 +90,7 @@ class AckleyES(object):
         """
         Fitness function.
         """
-        error = np.linalg.norm(candidate)
-        return 1 / (error + 1)
+        return -np.abs(ackley_function(candidate))
 
     def recombine(self):
         """
@@ -83,11 +113,10 @@ class AckleyES(object):
         offspring_solutions = []
         cols = np.arange(self.n)
         indices = np.arange(self.population_size)
-        for _ in range(self.offspring_size):
-            rows = rng.choice(indices, size=self.n, replace=False)
-            new_solution = pop_solutions[rows, cols]
-            offspring_solutions.append(new_solution)
-        
+        offspring_solutions = [
+            pop_solutions[rng.choice(indices, size=self.n, replace=False), cols]
+            for _ in range(self.offspring_size)
+        ]
         return np.array(offspring_solutions)
     
     def recombine_parameters(self):
@@ -126,7 +155,7 @@ class AckleyES(object):
         parameters for each variable.
         """
         rng = np.random.default_rng()
-        eps = 1e-3
+        eps = 1e-5
 
         # Compute the mutation.
         gaussian_var = rng.standard_normal(1)[0]
