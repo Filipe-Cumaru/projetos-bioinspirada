@@ -28,12 +28,17 @@ class AckleyES(object):
             offspring = self.recombine()
             mutated_offspring = self.mutate(offspring)
             self.select_survivors(mutated_offspring)
+            index = self.pop_fitness.argmax()
+            print("Min func error: {} // Min sol error: {}".format(
+                -self.pop_fitness.max(), np.linalg.norm(self.population[index, 0])))
+            print("Avg func: {} // Std dev: {}".format(
+                -np.average(self.pop_fitness), np.std(self.pop_fitness)))
             print("[{}] Done!".format(num_iter))
             num_iter += 1
 
         index = self.pop_fitness.argmax()
         report = {
-            "convergence": num_iter < 100000,
+            "convergence": num_iter < self.max_iter,
             "iterations": num_iter,
             "min error function": -self.pop_fitness.max(),
             "min error solution": np.linalg.norm(self.population[index, 0])
@@ -119,7 +124,7 @@ class AckleyES(object):
         parameters for each variable.
         """
         rng = np.random.default_rng()
-        eps = 1e-5
+        eps = 1e-2
 
         # Compute the mutation.
         gaussian_var = rng.standard_normal(1)[0]
