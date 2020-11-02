@@ -124,7 +124,11 @@ class AckleyES(object):
         parameters for each variable.
         """
         rng = np.random.default_rng()
-        eps = 1e-1
+
+        if np.abs(self.pop_fitness.max()) > 1.5:
+            eps = 1e-1
+        else:
+            eps = 1e-2
 
         # Compute the mutation.
         gaussian_var = rng.standard_normal(1)[0]
