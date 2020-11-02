@@ -1,0 +1,1 @@
+{"convergence": false, "iterations": 168537, "min error function": 0.009518462443030007, "min error solution": 0.012645049320868674}
